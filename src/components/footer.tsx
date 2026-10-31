@@ -4,7 +4,7 @@ import { Heart } from "lucide-react"
 const quickLinks = [
   { label: "Home Overview", href: "/" },
   { label: "Upcoming Volunteer Events", href: "/events" },
-  { label: "Host an Event", href: "/host" },
+  { label: "Host an Event", href: "/create-event" },
   { label: "My Participation", href: "/participation" },
 ] as const
 

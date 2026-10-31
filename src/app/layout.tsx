@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 
 // Applies the persisted (or system) theme before first paint to avoid a flash.
 const themeInit = `try{var t=localStorage.getItem('theme');if(t==='dark'||(t!== 'light'&&matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}`;
@@ -29,7 +31,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+        <Navbar />
         {children}
+        <Footer />
       </body>
     </html>
   );

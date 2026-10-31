@@ -1,4 +1,5 @@
 import { ArrowRight, CirclePlus, Sparkles } from "lucide-react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 const stats = [
@@ -44,6 +45,7 @@ export function Banner() {
                 <Button
                   size="lg"
                   variant="outline"
+                  render={<Link href="/create-event" />}
                   className="h-11 rounded-xl border-white/20 bg-white/5 px-6 text-base font-semibold text-white hover:border-white/30 hover:bg-white/10 hover:text-white dark:border-white/20 dark:bg-white/5 dark:hover:bg-white/10"
                 >
                   <CirclePlus className="size-4" data-icon="inline-start" />
