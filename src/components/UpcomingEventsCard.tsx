@@ -1,6 +1,7 @@
 import { Calendar, MapPin, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { categoryLabel, type UpcomingEvent } from "@/lib/events"
+import Link from "next/link"
 
 const UpcomingEventsCard = ({ event }: { event: UpcomingEvent }) => {
   return (
@@ -48,12 +49,14 @@ const UpcomingEventsCard = ({ event }: { event: UpcomingEvent }) => {
         <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
           {event.description}
         </p>
+        <Link href={`/upcoming-events/${event._id}`}>
         <Button
           variant="outline"
           className="mt-4 h-10 w-full rounded-lg font-semibold"
         >
           View Event
         </Button>
+        </Link>
       </div>
     </article>
   )
