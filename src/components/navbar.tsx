@@ -46,7 +46,7 @@ export function Navbar() {
 
         <nav className="hidden md:block">
           <Link
-            href="/events"
+            href="/upcoming-events"
             className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950 dark:hover:text-emerald-300"
           >
             <Calendar className="size-4" />
