@@ -75,9 +75,11 @@ export function Navbar() {
           >
             Log In
           </Button>
+          <Link href={'/sign-up'}>
           <Button className="hidden bg-emerald-600 font-semibold text-white shadow-sm hover:bg-emerald-700 sm:inline-flex">
             Register
           </Button>
+          </Link>
           <Button
             variant="outline"
             size="icon-lg"

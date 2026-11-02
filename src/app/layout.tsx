@@ -5,8 +5,8 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 
 // Applies the persisted (or system) theme before first paint to avoid a flash.
-const themeInit = `try{var t=localStorage.getItem('theme');if(t==='dark'||(t!== 'light'&&matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}`;
-
+// const themeInit = `try{var t=localStorage.getItem('theme');if(t==='dark'||(t!== 'light'&&matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}`;
+// dangerouslySetInnerHTML={{ __html: themeInit }} 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -30,7 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+        {/* <script /> */}
         <Navbar />
         {children}
         <Footer />
