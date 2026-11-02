@@ -5,29 +5,51 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { redirect } from "next/navigation"
-
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 const SignUpPage = () => {
-  const handleSubmit = async (e: React.SubmitEvent<HTMLElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const user = Object.fromEntries(formData.entries()) as {
-      name: string;
-      email: string;
-      image: string;
-      password: string;
-    };
-    const { data, error } = await authClient.signUp.email({
-      ...user,
-    });
-    if (data) {
-      console.log(data);
-      redirect('/')
-    }
-    if (error) {
-      console.log(error);
-    }
+  const router = useRouter();
+
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+
+  const formData = new FormData(e.currentTarget);
+
+  const user = Object.fromEntries(formData.entries()) as {
+    name: string;
+    email: string;
+    image: string;
+    password: string;
   };
+
+  // Password validation
+  if (!/[A-Z]/.test(user.password)) {
+    toast.error("Password must contain an uppercase letter");
+    return;
+  }
+
+  if (!/[a-z]/.test(user.password)) {
+    toast.error("Password must contain a lowercase letter");
+    return;
+  }
+
+  if (user.password.length < 6) {
+    toast.error("Password must be at least 6 characters");
+    return;
+  }
+
+  const { data, error } = await authClient.signUp.email(user);
+
+  if (error) {
+    toast.error(error.message || "Registration failed!");
+    return;
+  }
+
+  if (data) {
+    toast.success("Account created successfully!");
+    router.push("/");
+  }
+};
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">
@@ -63,7 +85,16 @@ const SignUpPage = () => {
               required
             />
           </div>
-
+             <div className="space-y-2.5">
+               <Label htmlFor="image">Photo URL</Label>
+               <Input
+                 id="image"
+                 name="image"
+                 type="url"
+                 placeholder="https://example.com/profile.jpg"
+                 required
+               />
+             </div>
           <div className="space-y-2.5">
             <Label htmlFor="password">Password</Label>
             <Input
@@ -85,7 +116,7 @@ const SignUpPage = () => {
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Already registered?{" "}
           <Link
-            href="/sign-in"
+            href="/log-in"
             className="font-semibold text-emerald-600 hover:underline"
           >
             Login Here
