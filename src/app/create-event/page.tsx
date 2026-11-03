@@ -1,25 +1,27 @@
+"use client";
 
-"use client"
-
-import { useState, type FormEvent } from "react"
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 const categories = [
   { value: "winter-relief", label: "Winter Relief" },
@@ -29,61 +31,86 @@ const categories = [
   { value: "emergency-relief", label: "Emergency Relief" },
   { value: "plantation", label: "Plantation" },
   { value: "donation", label: "Donation" },
-] as const
+] as const;
 
 const categoryItems = Object.fromEntries(
-  categories.map((category) => [category.value, category.label])
-)
-
-const organizer = {
-  name: "Jahidul Islam",
-  email: "jahid1@gmail.com",
-}
+  categories.map((category) => [category.value, category.label]),
+);
 
 export default function CreateEventPage() {
+  const router = useRouter();
 
-  const [published, setPublished] = useState(false)
-  const [error, setError] = useState("")
+  const { data: session, isPending } = authClient.useSession();
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const user = session?.user;
 
-    setPublished(false)
-    setError("")
+  const [error, setError] = useState("");
 
-    
-    const formData = new FormData(e.currentTarget)
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-    const eventData = Object.fromEntries(formData.entries())
+    setError("");
 
-    // Validate future date
-    const selectedDate = new Date(`${eventData.date}T00:00:00`)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    if (selectedDate <= today) {
-      setError("Please select a future date.")
-      return
+    if (isPending) {
+      return;
     }
 
-    // Add temporary organizer information
-    eventData.organizerEmail = organizer.email
+    if (!user) {
+      toast.error("Please log in before creating an event.");
+      router.push("/log-in");
+      return;
+    }
 
+    try {
+      const formData = new FormData(e.currentTarget);
+      const eventData = Object.fromEntries(formData.entries());
+
+      const selectedDate = new Date(`${eventData.date}T00:00:00`);
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (isNaN(selectedDate.getTime()) || selectedDate <= today) {
+        setError("Please select a valid future date.");
+        return;
+      }
+
+      const data = {
+        ...eventData,
+        organizerEmail: user.email,
+      };
 
       const res = await fetch("http://localhost:8000/create-event", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(eventData),
-      })
+        body: JSON.stringify(data),
+      });
 
-      const result = await res.json()
-      console.log(result)
-      setPublished(true)
-      
-    
-  }
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.message || "Failed to create event.");
+      }
+
+      toast.success("Event created successfully!");
+
+      router.push("/upcoming-events");
+    } catch (err) {
+      console.error("Create event error:", err);
+
+      toast.error(err instanceof Error ? err.message : "Something went wrong!");
+    }
+  };
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const minDate = [
+    tomorrow.getFullYear(),
+    String(tomorrow.getMonth() + 1).padStart(2, "0"),
+    String(tomorrow.getDate()).padStart(2, "0"),
+  ].join("-");
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4 py-10 dark:bg-background">
@@ -125,10 +152,7 @@ export default function CreateEventPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
-                      <SelectItem
-                        key={category.value}
-                        value={category.value}
-                      >
+                      <SelectItem key={category.value} value={category.value}>
                         {category.label}
                       </SelectItem>
                     ))}
@@ -156,7 +180,7 @@ export default function CreateEventPage() {
                   name="date"
                   type="date"
                   required
-                  min={new Date().toLocaleDateString("en-CA")}
+                  min={minDate}
                   className="h-10"
                 />
               </div>
@@ -178,7 +202,8 @@ export default function CreateEventPage() {
                 id="thumbnail"
                 name="thumbnail"
                 type="url"
-                placeholder="https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1200&q=80"
+                required
+                placeholder="https://example.com/event-image.jpg"
                 className="h-10"
               />
             </div>
@@ -196,12 +221,13 @@ export default function CreateEventPage() {
             </div>
 
             <div className="rounded-lg bg-muted px-4 py-3.5 text-sm dark:bg-muted/50">
-              <p className="text-muted-foreground">
-                Organizer Contact (Temporary):
+              <p className="text-muted-foreground">Event Organizer</p>
+
+              <p className="mt-1 font-medium text-foreground">
+                {user?.name || "Loading..."}
               </p>
-              <p className="mt-1 text-foreground">
-                {organizer.name} ({organizer.email})
-              </p>
+
+              <p className="text-muted-foreground">{user?.email || ""}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -210,8 +236,7 @@ export default function CreateEventPage() {
                 variant="outline"
                 className="h-10 rounded-lg font-medium"
                 onClick={() => {
-                  setPublished(false)
-                  setError("")
+                  setError("");
                 }}
               >
                 Cancel
@@ -219,20 +244,12 @@ export default function CreateEventPage() {
 
               <Button
                 type="submit"
+                disabled={isPending}
                 className="h-10 rounded-lg bg-emerald-600 font-semibold text-white hover:bg-emerald-700"
               >
-                Publish Event
+                {isPending ? "Checking Session..." : "Publish Event"}
               </Button>
             </div>
-
-            {published && (
-              <p
-                role="status"
-                className="text-center text-sm font-medium text-emerald-600 dark:text-emerald-400"
-              >
-                Event published successfully! Redirecting...
-              </p>
-            )}
 
             {error && (
               <p
@@ -246,5 +263,5 @@ export default function CreateEventPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
