@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useState, type FormEvent } from "react"
-import { Pencil, Save } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useState, type FormEvent } from "react";
+import { Pencil, Save } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,18 +10,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import type { UpcomingEvent } from "@/lib/events"
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import type { UpcomingEvent } from "@/lib/events";
 
 const categories = [
   { value: "winter-relief", label: "Winter Relief" },
@@ -31,48 +31,48 @@ const categories = [
   { value: "emergency-relief", label: "Emergency Relief" },
   { value: "plantation", label: "Plantation" },
   { value: "donation", label: "Donation" },
-]
+];
 
 type EventForm = {
-  title: string
-  description: string
-  category: string
-  location: string
-  date: string
-  time: string
-  thumbnail: string
-}
+  title: string;
+  description: string;
+  category: string;
+  location: string;
+  date: string;
+  time: string;
+  thumbnail: string;
+};
 
 export function EditEventDialog({
   event,
   onUpdated,
 }: {
-  event: UpcomingEvent
-  onUpdated: (updatedEvent: UpcomingEvent) => void
+  event: UpcomingEvent;
+  onUpdated: (updatedEvent: UpcomingEvent) => void;
 }) {
-  const [open, setOpen] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState("")
+  const [open, setOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const [form, setForm] = useState<EventForm>({
-  title: event.title,
-  description: event.description,
-  category: event.category,
-  location: event.location,
-  date: event.date,
-  time: event.time || "",
-  thumbnail: event.thumbnail || "",
-})
+    title: event.title,
+    description: event.description,
+    category: event.category,
+    location: event.location,
+    date: event.date,
+    time: event.time || "",
+    thumbnail: event.thumbnail || "",
+  });
 
   const update = (key: keyof EventForm, value: string) => {
-    setForm((prev) => ({ ...prev, [key]: value }))
-    setError("")
-  }
+    setForm((prev) => ({ ...prev, [key]: value }));
+    setError("");
+  };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSaving(true)
-    setError("")
+    e.preventDefault();
+    setIsSaving(true);
+    setError("");
 
     try {
       const res = await fetch(
@@ -83,26 +83,26 @@ export function EditEventDialog({
             "Content-Type": "application/json",
           },
           body: JSON.stringify(form),
-        }
-      )
+        },
+      );
 
       if (!res.ok) {
-        throw new Error("Failed to update event")
+        throw new Error("Failed to update event");
       }
 
-      const data = await res.json()
+      const data = await res.json();
 
-if (data.modifiedCount > 0 || data.matchedCount > 0) {
-  onUpdated({ ...event, ...form })
-  setOpen(false)
-}
+      if (data.modifiedCount > 0 || data.matchedCount > 0) {
+        onUpdated({ ...event, ...form });
+        setOpen(false);
+      }
     } catch (error) {
-      console.log(error)
-      setError("Something went wrong. Please try again.")
+      console.log(error);
+      setError("Something went wrong. Please try again.");
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -142,7 +142,11 @@ if (data.modifiedCount > 0 || data.matchedCount > 0) {
             <Label htmlFor="event-category">Event Category</Label>
             <Select
               value={form.category}
-              onValueChange={(value) => update("category", value)}
+              onValueChange={(value) => {
+                if (value) {
+                  update("category", value);
+                }
+              }}
             >
               <SelectTrigger id="event-category" className="w-full">
                 <SelectValue placeholder="Select a category" />
@@ -213,9 +217,7 @@ if (data.modifiedCount > 0 || data.matchedCount > 0) {
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
           <div className="flex justify-end gap-2">
             <Button
@@ -234,5 +236,5 @@ if (data.modifiedCount > 0 || data.matchedCount > 0) {
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

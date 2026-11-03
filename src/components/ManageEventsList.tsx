@@ -8,10 +8,12 @@ const ManageEventsList = ({
   events,
   isLoading,
   onUpdated,
+  onDeleted,
 }: {
   events: UpcomingEvent[]
   isLoading: boolean
   onUpdated: (updatedEvent: UpcomingEvent) => void
+  onDeleted: (id: string) => void
 }) => {
   if (isLoading) {
     return (
@@ -77,6 +79,7 @@ const ManageEventsList = ({
     key={event._id}
     event={event}
     onUpdated={onUpdated}
+    onDeleted={onDeleted}
   />
 ))}
     </div>

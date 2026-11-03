@@ -46,6 +46,9 @@ const ManageEventsPage = () => {
     )
   )
 }
+const handleEventDeleted = (id: string) => {
+  setEvents((prev) => prev.filter((event) => event._id !== id))
+}
 
   return (
     <main className="flex-1">
@@ -72,6 +75,7 @@ const ManageEventsPage = () => {
   events={events}
   isLoading={isLoading}
   onUpdated={handleEventUpdated}
+  onDeleted={handleEventDeleted}
 />
       </section>
     </main>
