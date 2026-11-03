@@ -1,6 +1,6 @@
 "use client";
 import type { UpcomingEvent } from "@/lib/events";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarDays, Clock, MapPin, Mail, Heart } from "lucide-react";
 
@@ -27,6 +27,49 @@ const EventDetailsDialog = ({ event }: { event: UpcomingEvent }) => {
   const [isJoined, setIsJoined] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState(false);
+ const [checkedEvent, setCheckedEvent] = useState({
+  email: "",
+  eventId: "",
+});
+
+  useEffect(() => {
+  const email = session?.user?.email;
+
+  if (isPending || !email) return;
+
+  const checkJoinedEvent = async () => {
+    try {
+      const res = await fetch(
+        `http://localhost:8000/joined-events/${encodeURIComponent(email)}`
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to check joined events");
+      }
+
+      const joinedEvents = await res.json();
+
+      const alreadyJoined = joinedEvents.some(
+        (item: { eventId: string }) => item.eventId === event._id
+      );
+
+      setIsJoined(alreadyJoined);
+      setCheckedEvent({
+        email,
+        eventId: event._id,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  checkJoinedEvent();
+}, [session?.user?.email, isPending, event._id]);
+
+const isCheckingJoined =
+  !!session?.user?.email &&
+  (checkedEvent.email !== session.user.email ||
+    checkedEvent.eventId !== event._id);
 
   // Format event date
   const formattedDate = new Date(`${event.date}T00:00:00`).toLocaleDateString(
@@ -215,12 +258,12 @@ const EventDetailsDialog = ({ event }: { event: UpcomingEvent }) => {
 
             <Button
               onClick={handleJoinEvent}
-              disabled={isJoining || isJoined || isPending}
+              disabled={isJoining || isJoined || isPending || isCheckingJoined}
               className="gap-2 rounded-xl bg-emerald-600 px-6 text-white hover:bg-emerald-700 disabled:opacity-60"
             >
               <Heart size={18} fill="currentColor" />
 
-              {isPending
+              {isPending || isCheckingJoined
                 ? "Checking..."
                 : isJoining
                   ? "Joining..."
