@@ -1,15 +1,10 @@
-
 "use client";
-
+import type { UpcomingEvent } from "@/lib/events";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  CalendarDays,
-  Clock,
-  MapPin,
-  Mail,
-  Heart,
-  UserRound,
-} from "lucide-react";
+import { CalendarDays, Clock, MapPin, Mail, Heart } from "lucide-react";
+
+import { authClient } from "@/lib/auth-client";
 
 import {
   Dialog,
@@ -21,24 +16,79 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import Image from "next/image";
 
-const EventDetailsDialog = ({ event }) => {
+const EventDetailsDialog = ({ event }: { event: UpcomingEvent }) => {
   const router = useRouter();
 
+  const { data: session, isPending } = authClient.useSession();
+
+  const [isJoining, setIsJoining] = useState(false);
+  const [isJoined, setIsJoined] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState(false);
+
   // Format event date
-  const formattedDate = new Date(
-    `${event.date}T00:00:00`
-  ).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const formattedDate = new Date(`${event.date}T00:00:00`).toLocaleDateString(
+    "en-US",
+    {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    },
+  );
 
   // Format category name
   const category = event.category
     ?.split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+
+  // Handle Join Event
+  const handleJoinEvent = async () => {
+    // Check login
+    if (!session?.user?.email) {
+      router.push("/login");
+      return;
+    }
+
+    setIsJoining(true);
+    setMessage("");
+    setError(false);
+
+    try {
+      const res = await fetch("http://localhost:8000/join-event", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          eventId: event._id,
+          userEmail: session.user.email,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to join event");
+      }
+
+      const data = await res.json();
+
+      if (data.message === "Already joined") {
+        setIsJoined(true);
+        setMessage("You have already joined this event.");
+      } else {
+        setIsJoined(true);
+        setMessage("You have successfully joined this event!");
+      }
+    } catch (error) {
+      console.log(error);
+      setError(true);
+      setMessage("Something went wrong. Please try again.");
+    } finally {
+      setIsJoining(false);
+    }
+  };
 
   return (
     <Dialog
@@ -47,113 +97,114 @@ const EventDetailsDialog = ({ event }) => {
         if (!open) router.back();
       }}
     >
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto p-0 gap-0 rounded-3xl">
-
+      <DialogContent className="flex max-h-[90dvh] w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden rounded-3xl p-0 sm:max-w-3xl">
         {/* Event Thumbnail */}
-        <div className="relative h-56 sm:h-72">
-          <img
-            src={event.thumbnail}
+        <div className="relative h-48 shrink-0 sm:h-64">
+          <Image
+            src={event.thumbnail || "/images/event-placeholder.png"}
             alt={event.title}
-            className="w-full h-full object-cover"
+            fill
+            unoptimized
+            className="object-cover"
           />
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
 
-          <Badge className="absolute bottom-5 left-7 bg-emerald-500 hover:bg-emerald-600 text-white border-none px-4 py-2">
+          <Badge className="absolute bottom-5 left-7 border-none bg-emerald-500 px-4 py-2 text-white hover:bg-emerald-600">
             {category}
           </Badge>
         </div>
 
-        {/* Event Information */}
-        <div className="p-6 sm:p-8 space-y-6">
-
+        {/* Scrollable Event Information */}
+        <div className="min-h-0 flex-1 overflow-y-auto p-6 sm:p-8">
           {/* Title and Description */}
           <div className="space-y-3">
-            <DialogTitle className="text-2xl sm:text-3xl font-bold text-slate-900">
+            <DialogTitle className="text-2xl font-bold text-slate-900 sm:text-3xl">
               {event.title}
             </DialogTitle>
 
-            <DialogDescription className="text-base text-slate-500 leading-7">
+            <DialogDescription className="text-base leading-7 text-slate-500">
               {event.description}
             </DialogDescription>
           </div>
 
           {/* Event Details */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 rounded-2xl bg-slate-50 border p-5">
-
+          <div className="mt-6 grid grid-cols-1 gap-5 rounded-2xl border bg-slate-50 p-5 sm:grid-cols-2">
             {/* Date */}
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-emerald-100 text-emerald-600">
+              <div className="rounded-xl bg-emerald-100 p-3 text-emerald-600">
                 <CalendarDays size={22} />
               </div>
 
               <div>
-                <p className="text-sm text-slate-400 font-medium">
-                  Date
-                </p>
-                <p className="font-semibold text-slate-800">
-                  {formattedDate}
-                </p>
+                <p className="text-sm font-medium text-slate-400">Date</p>
+                <p className="font-semibold text-slate-800">{formattedDate}</p>
               </div>
             </div>
 
             {/* Time */}
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-amber-100 text-amber-600">
+              <div className="rounded-xl bg-amber-100 p-3 text-amber-600">
                 <Clock size={22} />
               </div>
 
               <div>
-                <p className="text-sm text-slate-400 font-medium">
-                  Time
-                </p>
-                <p className="font-semibold text-slate-800">
-                  {event.time}
-                </p>
+                <p className="text-sm font-medium text-slate-400">Time</p>
+                <p className="font-semibold text-slate-800">{event.time}</p>
               </div>
             </div>
 
             {/* Location */}
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="p-3 rounded-xl bg-indigo-100 text-indigo-600">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="rounded-xl bg-indigo-100 p-3 text-indigo-600">
                 <MapPin size={22} />
               </div>
 
               <div className="min-w-0">
-                <p className="text-sm text-slate-400 font-medium">
-                  Location
-                </p>
-                <p className="font-semibold text-slate-800 break-words">
+                <p className="text-sm font-medium text-slate-400">Location</p>
+                <p className="wrap-break-word font-semibold text-slate-800">
                   {event.location}
                 </p>
               </div>
             </div>
 
             {/* Organizer Email */}
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="p-3 rounded-xl bg-teal-100 text-teal-600">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="rounded-xl bg-teal-100 p-3 text-teal-600">
                 <Mail size={22} />
               </div>
 
               <div className="min-w-0">
-                <p className="text-sm text-slate-400 font-medium">
+                <p className="text-sm font-medium text-slate-400">
                   Organizer Email
                 </p>
                 <a
                   href={`mailto:${event.organizerEmail}`}
-                  className="font-semibold text-slate-800 hover:text-emerald-600 break-all"
+                  className="break-all font-semibold text-slate-800 hover:text-emerald-600"
                 >
                   {event.organizerEmail}
                 </a>
               </div>
             </div>
-
           </div>
 
-          <Separator />
+          <Separator className="my-6" />
+
+          {/* Success / Error Message */}
+          {message && (
+            <p
+              className={`mb-4 rounded-lg p-3 text-sm ${
+                error
+                  ? "bg-red-50 text-red-600"
+                  : "bg-emerald-50 text-emerald-700"
+              }`}
+            >
+              {message}
+            </p>
+          )}
 
           {/* Action Buttons */}
-          <div className="flex justify-end items-center gap-4">
+          <div className="flex items-center justify-end gap-3">
             <Button
               variant="ghost"
               onClick={() => router.back()}
@@ -163,15 +214,21 @@ const EventDetailsDialog = ({ event }) => {
             </Button>
 
             <Button
-              disabled
-              className="bg-emerald-600 text-white gap-2 rounded-xl px-6"
-              title="Event joining will be available after authentication is implemented"
+              onClick={handleJoinEvent}
+              disabled={isJoining || isJoined || isPending}
+              className="gap-2 rounded-xl bg-emerald-600 px-6 text-white hover:bg-emerald-700 disabled:opacity-60"
             >
               <Heart size={18} fill="currentColor" />
-              Join Event Now
+
+              {isPending
+                ? "Checking..."
+                : isJoining
+                  ? "Joining..."
+                  : isJoined
+                    ? "Already Joined"
+                    : "Join Event Now"}
             </Button>
           </div>
-
         </div>
       </DialogContent>
     </Dialog>
