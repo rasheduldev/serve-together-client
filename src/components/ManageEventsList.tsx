@@ -1,19 +1,10 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Inbox } from "lucide-react"
-import ManageEventCard from "@/components/ManageEventCard"
-import type { UpcomingEvent } from "@/lib/events"
+import { Inbox } from "lucide-react";
+import ManageEventCard from "@/components/ManageEventCard";
+import type { UpcomingEvent } from "@/lib/events";
 
-const ManageEventsList = ({ events }: { events: UpcomingEvent[] }) => {
-  // Stands in for a real fetch until the manage-events API is wired up.
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1000)
-    return () => clearTimeout(timer)
-  }, [])
-
+const ManageEventsList = ({events, isLoading,}: { events: UpcomingEvent[]; isLoading: boolean;}) => {
   if (isLoading) {
     return (
       <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-card shadow-[0_2px_12px_-4px_rgba(15,23,42,0.1)]">
@@ -45,19 +36,21 @@ const ManageEventsList = ({ events }: { events: UpcomingEvent[] }) => {
           </div>
         ))}
       </div>
-    )
+    );
   }
 
   if (events.length === 0) {
     return (
       <div className="mt-6 flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center">
         <Inbox className="size-10 text-muted-foreground" />
-        <p className="mt-3 font-semibold text-foreground">No events hosted yet</p>
+        <p className="mt-3 font-semibold text-foreground">
+          No events hosted yet
+        </p>
         <p className="mt-1 text-sm text-muted-foreground">
           Events you create will appear here once you publish them.
         </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -77,7 +70,7 @@ const ManageEventsList = ({ events }: { events: UpcomingEvent[] }) => {
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ManageEventsList
+export default ManageEventsList;
