@@ -12,21 +12,16 @@ const LogInPage = () => {
   const router = useRouter();
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     const formData = new FormData(e.currentTarget);
-
     const user = Object.fromEntries(formData.entries()) as {
       email: string;
       password: string;
     };
-
     const { data, error } = await authClient.signIn.email(user);
-
     if (error) {
       toast.error(error.message || "Login failed!");
       return;
     }
-
     if (data) {
       toast.success("Logged in successfully!");
       router.push("/");
@@ -44,7 +39,7 @@ const LogInPage = () => {
   }
 };
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-md rounded-3xl border border-border bg-card px-8 py-12 shadow-sm md:px-12">
         <div className="mb-10 text-center">
           <h1 className="font-heading text-3xl font-bold tracking-tight">
@@ -104,7 +99,7 @@ const LogInPage = () => {
   Continue with GitHub
 </Button>
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          Don't have an account?{" "}
+         Don&apos;t have an account?{" "}
           <Link
             href="/sign-up"
             className="font-semibold text-emerald-600 hover:underline"
