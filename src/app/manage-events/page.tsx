@@ -39,6 +39,13 @@ const ManageEventsPage = () => {
 
     fetchEvents()
   }, [session?.user?.email, isPending])
+  const handleEventUpdated = (updatedEvent: UpcomingEvent) => {
+  setEvents((prev) =>
+    prev.map((event) =>
+      event._id === updatedEvent._id ? updatedEvent : event
+    )
+  )
+}
 
   return (
     <main className="flex-1">
@@ -61,7 +68,11 @@ const ManageEventsPage = () => {
           </Link>
         </div>
 
-        <ManageEventsList events={events} isLoading={isLoading} />
+        <ManageEventsList
+  events={events}
+  isLoading={isLoading}
+  onUpdated={handleEventUpdated}
+/>
       </section>
     </main>
   )

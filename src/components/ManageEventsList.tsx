@@ -4,7 +4,15 @@ import { Inbox } from "lucide-react";
 import ManageEventCard from "@/components/ManageEventCard";
 import type { UpcomingEvent } from "@/lib/events";
 
-const ManageEventsList = ({events, isLoading,}: { events: UpcomingEvent[]; isLoading: boolean;}) => {
+const ManageEventsList = ({
+  events,
+  isLoading,
+  onUpdated,
+}: {
+  events: UpcomingEvent[]
+  isLoading: boolean
+  onUpdated: (updatedEvent: UpcomingEvent) => void
+}) => {
   if (isLoading) {
     return (
       <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-card shadow-[0_2px_12px_-4px_rgba(15,23,42,0.1)]">
@@ -64,11 +72,13 @@ const ManageEventsList = ({events, isLoading,}: { events: UpcomingEvent[]; isLoa
         <span className="justify-self-end">Actions</span>
       </div>
 
-      <div>
-        {events.map((event) => (
-          <ManageEventCard key={event._id} event={event} />
-        ))}
-      </div>
+      {events.map((event) => (
+  <ManageEventCard
+    key={event._id}
+    event={event}
+    onUpdated={onUpdated}
+  />
+))}
     </div>
   );
 };

@@ -1,9 +1,11 @@
 import Image from "next/image"
-import { CalendarDays, Pencil, Trash2 } from "lucide-react"
+import { CalendarDays, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { categoryLabel, type UpcomingEvent } from "@/lib/events"
 
-const ManageEventCard = ({ event }: { event: UpcomingEvent }) => {
+import { EditEventDialog } from "@/components/EditEventDialog"
+
+const ManageEventCard = ({event,onUpdated,}: {event: UpcomingEvent, onUpdated: (updatedEvent: UpcomingEvent) => void}) => {
   return (
     <article className="flex flex-col gap-4 border-b p-4 last:border-b-0 md:grid md:grid-cols-[minmax(0,2fr)_minmax(0,0.8fr)_minmax(0,0.9fr)_minmax(0,1.1fr)_auto] md:items-center md:gap-6 md:px-6">
       {/* Thumbnail + title + ID */}
@@ -65,23 +67,17 @@ const ManageEventCard = ({ event }: { event: UpcomingEvent }) => {
 
       {/* Actions */}
       <div className="flex gap-2 md:justify-self-end">
-        <Button
-          variant="outline"
-          size="icon"
-          className="size-9 rounded-lg text-muted-foreground hover:text-emerald-600"
-          aria-label={`Edit ${event.title}`}
-        >
-          <Pencil />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="size-9 rounded-lg text-muted-foreground hover:text-destructive"
-          aria-label={`Delete ${event.title}`}
-        >
-          <Trash2 />
-        </Button>
-      </div>
+  <EditEventDialog event={event} onUpdated={onUpdated} />
+
+  <Button
+    variant="outline"
+    size="icon"
+    className="size-9 rounded-lg text-muted-foreground hover:text-destructive"
+    aria-label={`Delete ${event.title}`}
+  >
+    <Trash2 />
+  </Button>
+</div>
     </article>
   )
 }
