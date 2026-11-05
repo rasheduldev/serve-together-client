@@ -117,7 +117,7 @@ export function EditEventDialog({
       const formattedTime = convertTo12Hour(form.time);
       const token = await getTokenFromClient()
       const res = await fetch(
-        `http://localhost:8000/update-event/${event._id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/update-event/${event._id}`,
         {
           method: "PATCH",
           headers: {
@@ -283,7 +283,7 @@ export function EditEventDialog({
 
             <Button
   type="submit"
-  className="h-9 rounded-lg border border-border bg-transparent px-4 text-muted-foreground hover:bg-transparent hover:text-emerald-600"
+ className=" rounded-lg bg-emerald-600 font-semibold text-white hover:bg-emerald-700"
   disabled={isSaving}
 >
   <Save />

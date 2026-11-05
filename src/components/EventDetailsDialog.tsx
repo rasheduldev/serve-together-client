@@ -58,7 +58,7 @@ const EventDetailsDialog = ({ event }: { event: UpcomingEvent }) => {
 
         // Get all events joined by this user
         const res = await fetch(
-          `http://localhost:8000/joined-events/${encodeURIComponent(email)}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/joined-events/${encodeURIComponent(email)}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -111,7 +111,7 @@ const EventDetailsDialog = ({ event }: { event: UpcomingEvent }) => {
 
     // Check whether the user is logged in
     if (!session?.user?.email) {
-      router.push("/login");
+      router.push("/log-in");
       return;
     }
 
@@ -121,7 +121,7 @@ const EventDetailsDialog = ({ event }: { event: UpcomingEvent }) => {
 
     try {
       // Send event information to your existing backend
-      const res = await fetch("http://localhost:8000/join-event", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/join-event`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

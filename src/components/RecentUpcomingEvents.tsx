@@ -7,7 +7,7 @@ const RecentUpcomingEvents = async () => {
   let events: UpcomingEvent[] = []
 
   try {
-    const res = await fetch("http://localhost:8000/recent-upcoming-events")
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/recent-upcoming-events`)
     if (res.ok) {
       const data = await res.json()
       if (Array.isArray(data)) events = data

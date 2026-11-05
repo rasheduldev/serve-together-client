@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -24,20 +23,25 @@ const JoinedEventsPage = () => {
 
     // Check login
     if (!session?.user?.email) {
-      router.replace("/login");
+      router.replace("/log-in");
       return;
     }
 
     const fetchJoinedEvents = async () => {
-      const token = await getTokenFromClient()
       try {
+        const token = await getTokenFromClient();
+
+        if (!token) {
+          throw new Error("Authentication token not found");
+        }
         // Get joined event records
         const res = await fetch(
-          `http://localhost:8000/joined-events/${session.user.email}`,{
-                headers:{
-                  authorization:`Bearer ${token}`
-                }
-              }
+          `${process.env.NEXT_PUBLIC_API_URL}/joined-events/${session?.user.email}`,
+          {
+            headers: {
+              authorization: `Bearer ${token}`,
+            },
+          },
         );
 
         if (!res.ok) {
@@ -50,21 +54,20 @@ const JoinedEventsPage = () => {
         const eventData = await Promise.all(
           joinedEvents.map(async (item: { eventId: string }) => {
             const eventRes = await fetch(
-              `http://localhost:8000/upcoming-event/${item.eventId}`,
+              `${process.env.NEXT_PUBLIC_API_URL}/upcoming-event/${item.eventId}`,
             );
 
             if (!eventRes.ok) return null;
 
             return eventRes.json();
-          })
+          }),
         );
 
         // Remove missing events and sort by date
         const validEvents = eventData
           .filter((event): event is UpcomingEvent => event !== null)
           .sort(
-            (a, b) =>
-              new Date(a.date).getTime() - new Date(b.date).getTime()
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
           );
 
         setEvents(validEvents);
@@ -77,7 +80,7 @@ const JoinedEventsPage = () => {
     };
 
     fetchJoinedEvents();
-}, [session?.user?.email, isPending, router]);
+  }, [session?.user?.email, isPending, router]);
 
   if (isPending || isLoading) {
     return (
@@ -99,9 +102,7 @@ const JoinedEventsPage = () => {
         </p>
 
         {error ? (
-          <div className="mt-8 text-center text-red-500">
-            {error}
-          </div>
+          <div className="mt-8 text-center text-red-500">{error}</div>
         ) : events.length > 0 ? (
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {events.map((event) => (

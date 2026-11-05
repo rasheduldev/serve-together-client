@@ -2,26 +2,37 @@
 import EventDetailsDialog from "@/components/EventDetailsDialog";
 import { notFound } from "next/navigation";
 
-const UpcomingEventsDetailsPage = async ({ params }) => {
+type PageProps = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+const UpcomingEventsDetailsPage = async ({ params }: PageProps) => {
   const { id } = await params;
 
-  let event;
+  let res: Response;
 
   try {
-    const res = await fetch(
-      `http://localhost:8000/upcoming-event/${id}`,
+    res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/upcoming-event/${id}`,
       { cache: "no-store" }
     );
-
-    if (!res.ok) {
-      notFound();
-    }
-
-    event = await res.json();
   } catch (error) {
     console.error("Failed to fetch event:", error);
+    throw error;
+  }
+
+  // If the event doesn't exist, show your global 404 page.
+  if (res.status === 404) {
     notFound();
   }
+
+  if (!res.ok) {
+    throw new Error("Failed to load event details");
+  }
+
+  const event = await res.json();
 
   if (!event) {
     notFound();

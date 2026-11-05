@@ -10,46 +10,46 @@ import { toast } from "sonner";
 const SignUpPage = () => {
   const router = useRouter();
 
-const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-  const formData = new FormData(e.currentTarget);
+    const formData = new FormData(e.currentTarget);
 
-  const user = Object.fromEntries(formData.entries()) as {
-    name: string;
-    email: string;
-    image: string;
-    password: string;
+    const user = Object.fromEntries(formData.entries()) as {
+      name: string;
+      email: string;
+      image: string;
+      password: string;
+    };
+
+    // Password validation
+    if (!/[A-Z]/.test(user.password)) {
+      toast.error("Password must contain an uppercase letter");
+      return;
+    }
+
+    if (!/[a-z]/.test(user.password)) {
+      toast.error("Password must contain a lowercase letter");
+      return;
+    }
+
+    if (user.password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    const { data, error } = await authClient.signUp.email(user);
+
+    if (error) {
+      toast.error(error.message || "Registration failed!");
+      return;
+    }
+
+    if (data) {
+      toast.success("Account created successfully!");
+      router.push("/");
+    }
   };
-
-  // Password validation
-  if (!/[A-Z]/.test(user.password)) {
-    toast.error("Password must contain an uppercase letter");
-    return;
-  }
-
-  if (!/[a-z]/.test(user.password)) {
-    toast.error("Password must contain a lowercase letter");
-    return;
-  }
-
-  if (user.password.length < 6) {
-    toast.error("Password must be at least 6 characters");
-    return;
-  }
-
-  const { data, error } = await authClient.signUp.email(user);
-
-  if (error) {
-    toast.error(error.message || "Registration failed!");
-    return;
-  }
-
-  if (data) {
-    toast.success("Account created successfully!");
-    router.push("/");
-  }
-};
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
@@ -85,25 +85,29 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
               required
             />
           </div>
-             <div className="space-y-2.5">
-               <Label htmlFor="image">Photo URL</Label>
-               <Input
-                 id="image"
-                 name="image"
-                 type="url"
-                 placeholder="https://example.com/profile.jpg"
-                 required
-               />
-             </div>
+          <div className="space-y-2.5">
+            <Label htmlFor="image">Photo URL</Label>
+            <Input
+              id="image"
+              name="image"
+              type="url"
+              placeholder="https://example.com/profile.jpg"
+              required
+            />
+          </div>
           <div className="space-y-2.5">
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
               name="password"
               type="password"
-              placeholder="••••••••"
+              placeholder="At least 6 characters, uppercase and lowercase"
               required
             />
+            <p className="text-xs text-muted-foreground">
+              Must contain at least one uppercase letter, one lowercase letter,
+              and 6 characters.
+            </p>
           </div>
           <Button
             type="submit"

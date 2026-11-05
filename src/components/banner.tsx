@@ -1,13 +1,13 @@
-import { ArrowRight, CirclePlus, Sparkles } from "lucide-react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { ArrowRight, CirclePlus, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const stats = [
   { value: "120+", label: "Drives Organized", accent: false },
   { value: "4,500+", label: "Active Volunteers", accent: false },
   { value: "15", label: "Dhaka Neighborhoods", accent: false },
   { value: "100%", label: "Community Driven", accent: true },
-] as const
+] as const;
 
 export function Banner() {
   return (
@@ -37,6 +37,7 @@ export function Banner() {
               <div className="mt-8 flex flex-wrap gap-4">
                 <Button
                   size="lg"
+                  render={<Link href="/upcoming-events" />}
                   className="h-11 rounded-xl bg-emerald-500 px-6 text-base font-semibold text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-400"
                 >
                   Explore Upcoming Events
@@ -95,5 +96,5 @@ export function Banner() {
         </div>
       </div>
     </section>
-  )
+  );
 }

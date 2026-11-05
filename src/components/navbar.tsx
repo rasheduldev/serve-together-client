@@ -1,4 +1,6 @@
+
 "use client";
+
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,14 +17,17 @@ import {
   UserRound,
   SunMoon,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
+
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
+
 import {
   Popover,
   PopoverContent,
@@ -31,29 +36,44 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover";
+
 export function Navbar() {
   const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
+
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
+
   // Logout function
   const handleLogout = async () => {
     const { error } = await authClient.signOut();
+
     if (error) {
       toast.error("Logout failed!");
       return;
     }
+
+    setProfileMenuOpen(false);
     setMenuOpen(false);
+
     toast.success("Logged out successfully!");
     router.push("/");
   };
 
   // Get the first letter of the user's name
   const userInitial = user?.name?.charAt(0).toUpperCase() || "U";
+
   // Theme toggle function
   const handleThemeChange = () => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  };
+
+  // Close desktop profile dropdown
+  const closeProfileMenu = () => {
+    setProfileMenuOpen(false);
   };
 
   return (
@@ -67,7 +87,7 @@ export function Navbar() {
           </span>
 
           <span className="flex flex-col leading-tight">
-            <span className="bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-lg font-extrabold text-transparent sm:text-xl">
+            <span className="bg-linear-to-r from-emerald-600 to-emerald-500 bg-clip-text text-lg font-extrabold text-transparent sm:text-xl">
               ServeTogether
             </span>
 
@@ -104,7 +124,10 @@ export function Navbar() {
 
           {/* Logged-in User */}
           {!isPending && user && (
-            <Popover>
+            <Popover
+              open={profileMenuOpen}
+              onOpenChange={setProfileMenuOpen}
+            >
               <PopoverTrigger
                 render={
                   <button
@@ -140,6 +163,7 @@ export function Navbar() {
 
                   <Link
                     href="/profile"
+                    onClick={closeProfileMenu}
                     className="flex items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-accent"
                   >
                     <UserRound className="size-4" />
@@ -148,6 +172,7 @@ export function Navbar() {
 
                   <Link
                     href="/create-event"
+                    onClick={closeProfileMenu}
                     className="flex items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-accent"
                   >
                     <PlusCircle className="size-4" />
@@ -156,6 +181,7 @@ export function Navbar() {
 
                   <Link
                     href="/manage-events"
+                    onClick={closeProfileMenu}
                     className="flex items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-accent"
                   >
                     <ClipboardList className="size-4" />
@@ -164,6 +190,7 @@ export function Navbar() {
 
                   <Link
                     href="/joined-events"
+                    onClick={closeProfileMenu}
                     className="flex items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-accent"
                   >
                     <Users className="size-4" />

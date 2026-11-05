@@ -1,59 +1,73 @@
+"use client";
 
-"use client"
-
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { CirclePlus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import ManageEventsList from "@/components/ManageEventsList"
-import { authClient } from "@/lib/auth-client"
-import type { UpcomingEvent } from "@/lib/events"
-import { getTokenFromClient } from "@/lib/getTokenFromClient"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { CirclePlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import ManageEventsList from "@/components/ManageEventsList";
+import { authClient } from "@/lib/auth-client";
+import type { UpcomingEvent } from "@/lib/events";
+import { getTokenFromClient } from "@/lib/getTokenFromClient";
 
 const ManageEventsPage = () => {
-  const { data: session, isPending } = authClient.useSession()
+  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
 
-  const [events, setEvents] = useState<UpcomingEvent[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [events, setEvents] = useState<UpcomingEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (isPending) return
+    if (isPending) return;
 
     const fetchEvents = async () => {
       if (!session?.user?.email) {
-        setIsLoading(false)
-        return
+        router.replace("/log-in");
+        return;
       }
-      const token = await getTokenFromClient()
-      try {
-        const res = await fetch(
-          `http://localhost:8000/my-events/${session?.user.email}`,{
-            headers:{
-              authorization: `Bearer ${token}`
-            }
-          }
-        )
-        const data = await res.json()
-        setEvents(data)
-      } catch (error) {
-        console.log(error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
 
-    fetchEvents()
-  }, [session?.user?.email, isPending])
+      try {
+        const token = await getTokenFromClient();
+
+        if (!token) {
+          throw new Error("Authentication token not found");
+        }
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/my-events/${session.user.email}`,
+          {
+            headers: {
+              authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch your events");
+        }
+
+        const data = await res.json();
+        setEvents(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [session?.user?.email, isPending, router]);
   const handleEventUpdated = (updatedEvent: UpcomingEvent) => {
-  setEvents((prev) =>
-    prev.map((event) =>
-      event._id === updatedEvent._id ? updatedEvent : event
-    )
-  )
-}
-const handleEventDeleted = (id: string) => {
-  setEvents((prev) => prev.filter((event) => event._id !== id))
-}
+    setEvents((prev) =>
+      prev.map((event) =>
+        event._id === updatedEvent._id ? updatedEvent : event,
+      ),
+    );
+  };
+
+  const handleEventDeleted = (id: string) => {
+    setEvents((prev) => prev.filter((event) => event._id !== id));
+  };
 
   return (
     <main className="flex-1">
@@ -77,14 +91,14 @@ const handleEventDeleted = (id: string) => {
         </div>
 
         <ManageEventsList
-  events={events}
-  isLoading={isLoading}
-  onUpdated={handleEventUpdated}
-  onDeleted={handleEventDeleted}
-/>
+          events={events}
+          isLoading={isLoading}
+          onUpdated={handleEventUpdated}
+          onDeleted={handleEventDeleted}
+        />
       </section>
     </main>
-  )
-}
+  );
+};
 
-export default ManageEventsPage
+export default ManageEventsPage;

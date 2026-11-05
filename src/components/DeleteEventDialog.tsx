@@ -34,7 +34,7 @@ export function DeleteEventDialog({
     const token = await getTokenFromClient()
     try {
       const res = await fetch(
-        `http://localhost:8000/delete-event/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/delete-event/${id}`,
         {
           method: "DELETE",
           headers:{
