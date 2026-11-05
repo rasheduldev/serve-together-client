@@ -22,6 +22,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { getTokenFromClient } from "@/lib/getTokenFromClient";
 
 const categories = [
   { value: "winter-relief", label: "Winter Relief" },
@@ -79,11 +80,12 @@ export default function CreateEventPage() {
         ...eventData,
         organizerEmail: user.email,
       };
-
+      const token = await getTokenFromClient()
       const res = await fetch("http://localhost:8000/create-event", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          authorization: `Bearer ${token}`
         },
         body: JSON.stringify(data),
       });

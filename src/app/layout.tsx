@@ -37,7 +37,13 @@ export default function RootLayout({
           <Navbar />
           {children}
           <Footer />
-          <Toaster position="top-right" richColors />
+          <Toaster
+  position="top-center"
+  richColors
+  duration={2000}
+  visibleToasts={1}
+  closeButton={false}
+/>
         </Providers>
       </body>
     </html>

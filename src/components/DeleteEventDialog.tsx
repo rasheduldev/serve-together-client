@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { getTokenFromClient } from "@/lib/getTokenFromClient"
 
 export function DeleteEventDialog({
   id,
@@ -30,13 +31,17 @@ export function DeleteEventDialog({
   const handleDelete = async () => {
     setIsDeleting(true)
     setError("")
-
+    const token = await getTokenFromClient()
     try {
       const res = await fetch(
         `http://localhost:8000/delete-event/${id}`,
         {
           method: "DELETE",
+          headers:{
+            authorization: `Bearer ${token}`
+          }
         }
+        
       )
 
       if (!res.ok) {

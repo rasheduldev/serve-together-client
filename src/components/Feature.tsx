@@ -29,16 +29,16 @@ const features = [
 
 const Feature = () => {
   return (
-    <section className="bg-gray-50 py-16 sm:py-20">
+    <section className="bg-background py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="text-center">
           <span className="text-sm font-bold tracking-widest text-emerald-600 uppercase">
             How It Works
           </span>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
             Built for Community Leaders &amp; Volunteers
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-base text-gray-600 sm:text-lg">
+          <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground sm:text-lg">
             Everything you need to plan, host, and track social welfare drives
             in your neighborhood.
           </p>
@@ -47,18 +47,18 @@ const Feature = () => {
         <div className="mt-12 grid gap-6 sm:mt-16 lg:grid-cols-3 lg:gap-8">
           {features.map((feature) => (
             <div
-              key={feature.title}
-              className="rounded-2xl bg-white p-8 shadow-lg shadow-gray-200/60"
-            >
+  key={feature.title}
+  className="rounded-2xl border border-border bg-card p-8 shadow-lg shadow-black/5"
+>
               <span
                 className={`flex size-14 items-center justify-center rounded-2xl ${feature.iconBg}`}
               >
                 <feature.icon className={`size-6 ${feature.iconColor}`} />
               </span>
-              <h3 className="mt-6 text-xl font-bold text-gray-900">
+              <h3 className="mt-6 text-xl font-bold text-card-foreground">
                 {feature.title}
               </h3>
-              <p className="mt-3 text-base leading-relaxed text-gray-600">
+              <p className="mt-3 text-base leading-relaxed text-muted-foreground">
                 {feature.description}
               </p>
             </div>

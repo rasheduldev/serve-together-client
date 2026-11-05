@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import ManageEventsList from "@/components/ManageEventsList"
 import { authClient } from "@/lib/auth-client"
 import type { UpcomingEvent } from "@/lib/events"
+import { getTokenFromClient } from "@/lib/getTokenFromClient"
 
 const ManageEventsPage = () => {
   const { data: session, isPending } = authClient.useSession()
@@ -23,10 +24,14 @@ const ManageEventsPage = () => {
         setIsLoading(false)
         return
       }
-
+      const token = await getTokenFromClient()
       try {
         const res = await fetch(
-          `http://localhost:8000/my-events/${encodeURIComponent(session.user.email)}`
+          `http://localhost:8000/my-events/${session?.user.email}`,{
+            headers:{
+              authorization: `Bearer ${token}`
+            }
+          }
         )
         const data = await res.json()
         setEvents(data)

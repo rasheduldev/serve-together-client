@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, type FormEvent } from "react";
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { UpcomingEvent } from "@/lib/events";
+import { getTokenFromClient } from "@/lib/getTokenFromClient";
 
 const categories = [
   { value: "winter-relief", label: "Winter Relief" },
@@ -43,6 +45,42 @@ type EventForm = {
   thumbnail: string;
 };
 
+const convertTo24Hour = (time: string): string => {
+  if (!time) return "";
+
+  // Replace semicolon with colon
+  time = time.replace(";", ":").trim();
+
+  if (!time.includes("AM") && !time.includes("PM")) {
+    return time.slice(0, 5);
+  }
+
+  const [timePart, modifier] = time.split(/\s+/);
+  const [hourString, minuteString] = timePart.split(":");
+
+  let hours = Number(hourString);
+  const minutes = Number(minuteString);
+
+  if (modifier === "PM" && hours !== 12) {
+    hours += 12;
+  }
+
+  if (modifier === "AM" && hours === 12) {
+    hours = 0;
+  }
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+};
+// Convert 24-hour time (14:30) to 12-hour time (02:30 PM)
+const convertTo12Hour = (time: string) => {
+  const [hours, minutes] = time.split(":").map(Number);
+
+  const modifier = hours >= 12 ? "PM" : "AM";
+  const formattedHours = hours % 12 || 12;
+
+  return `${String(formattedHours).padStart(2, "0")}:${String(minutes).padStart(2, "0")} ${modifier}`;
+};
+
 export function EditEventDialog({
   event,
   onUpdated,
@@ -53,14 +91,14 @@ export function EditEventDialog({
   const [open, setOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
-
+  console.log("Event time from database:", event.time);
   const [form, setForm] = useState<EventForm>({
     title: event.title,
     description: event.description,
     category: event.category,
     location: event.location,
     date: event.date,
-    time: event.time || "",
+    time: event.time ? convertTo24Hour(event.time) : "",
     thumbnail: event.thumbnail || "",
   });
 
@@ -71,18 +109,25 @@ export function EditEventDialog({
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     setIsSaving(true);
     setError("");
 
     try {
+      const formattedTime = convertTo12Hour(form.time);
+      const token = await getTokenFromClient()
       const res = await fetch(
         `http://localhost:8000/update-event/${event._id}`,
         {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
+            authorization: `Bearer ${token}`
           },
-          body: JSON.stringify(form),
+          body: JSON.stringify({
+            ...form,
+            time: formattedTime,
+          }),
         },
       );
 
@@ -93,11 +138,16 @@ export function EditEventDialog({
       const data = await res.json();
 
       if (data.modifiedCount > 0 || data.matchedCount > 0) {
-        onUpdated({ ...event, ...form });
+        onUpdated({
+          ...event,
+          ...form,
+          time: formattedTime,
+        });
+
         setOpen(false);
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
       setError("Something went wrong. Please try again.");
     } finally {
       setIsSaving(false);
@@ -151,6 +201,7 @@ export function EditEventDialog({
               <SelectTrigger id="event-category" className="w-full">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
+
               <SelectContent>
                 {categories.map((category) => (
                   <SelectItem key={category.value} value={category.value}>
@@ -217,7 +268,9 @@ export function EditEventDialog({
             />
           </div>
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          {error && (
+            <p className="text-sm text-destructive">{error}</p>
+          )}
 
           <div className="flex justify-end gap-2">
             <Button
@@ -228,10 +281,14 @@ export function EditEventDialog({
               Cancel
             </Button>
 
-            <Button type="submit" disabled={isSaving}>
-              <Save className="size-4" />
-              {isSaving ? "Saving..." : "Save Changes"}
-            </Button>
+            <Button
+  type="submit"
+  className="h-9 rounded-lg border border-border bg-transparent px-4 text-muted-foreground hover:bg-transparent hover:text-emerald-600"
+  disabled={isSaving}
+>
+  <Save />
+  {isSaving ? "Saving..." : "Save Changes"}
+</Button>
           </div>
         </form>
       </DialogContent>

@@ -1,10 +1,13 @@
+
 "use client";
+
 import type { UpcomingEvent } from "@/lib/events";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarDays, Clock, MapPin, Mail, Heart } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
+import { getTokenFromClient } from "@/lib/getTokenFromClient";
 
 import {
   Dialog,
@@ -25,71 +28,88 @@ const EventDetailsDialog = ({ event }: { event: UpcomingEvent }) => {
 
   const [isJoining, setIsJoining] = useState(false);
   const [isJoined, setIsJoined] = useState(false);
+  const [isCheckingJoined, setIsCheckingJoined] = useState(true);
+
   const [message, setMessage] = useState("");
   const [error, setError] = useState(false);
- const [checkedEvent, setCheckedEvent] = useState({
-  email: "",
-  eventId: "",
-});
 
+  // 1. Check whether the user has already joined this event
   useEffect(() => {
-  const email = session?.user?.email;
+    const checkJoinedEvent = async () => {
+      // Wait until Better Auth finishes checking the session
+      if (isPending) return;
 
-  if (isPending || !email) return;
+      const email = session?.user?.email;
 
-  const checkJoinedEvent = async () => {
-    try {
-      const res = await fetch(
-        `http://localhost:8000/joined-events/${encodeURIComponent(email)}`
-      );
-
-      if (!res.ok) {
-        throw new Error("Failed to check joined events");
+      // If the user is not logged in, there is nothing to check
+      if (!email) {
+        setIsJoined(false);
+        setIsCheckingJoined(false);
+        return;
       }
 
-      const joinedEvents = await res.json();
+      try {
+        // Get the authentication token
+        const token = await getTokenFromClient();
 
-      const alreadyJoined = joinedEvents.some(
-        (item: { eventId: string }) => item.eventId === event._id
-      );
+        if (!token) {
+          throw new Error("Authentication token not found");
+        }
 
-      setIsJoined(alreadyJoined);
-      setCheckedEvent({
-        email,
-        eventId: event._id,
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  };
+        // Get all events joined by this user
+        const res = await fetch(
+          `http://localhost:8000/joined-events/${encodeURIComponent(email)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-  checkJoinedEvent();
-}, [session?.user?.email, isPending, event._id]);
+        if (!res.ok) {
+          throw new Error("Failed to check joined events");
+        }
 
-const isCheckingJoined =
-  !!session?.user?.email &&
-  (checkedEvent.email !== session.user.email ||
-    checkedEvent.eventId !== event._id);
+        const joinedEvents = await res.json();
 
-  // Format event date
+        // Check whether the current event ID exists in the response
+        const alreadyJoined = joinedEvents.some(
+          (item: { eventId: string }) => item.eventId === event._id
+        );
+
+        setIsJoined(alreadyJoined);
+      } catch (error) {
+        console.error("Error checking joined event:", error);
+      } finally {
+        setIsCheckingJoined(false);
+      }
+    };
+
+    checkJoinedEvent();
+  }, [session?.user?.email, isPending, event._id]);
+
+  // 2. Format event date
   const formattedDate = new Date(`${event.date}T00:00:00`).toLocaleDateString(
     "en-US",
     {
       year: "numeric",
       month: "long",
       day: "numeric",
-    },
+    }
   );
 
-  // Format category name
+  // 3. Format category name
   const category = event.category
     ?.split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 
-  // Handle Join Event
+  // 4. Join Event
   const handleJoinEvent = async () => {
-    // Check login
+    // Wait until session checking is finished
+    if (isPending) return;
+
+    // Check whether the user is logged in
     if (!session?.user?.email) {
       router.push("/login");
       return;
@@ -100,6 +120,7 @@ const isCheckingJoined =
     setError(false);
 
     try {
+      // Send event information to your existing backend
       const res = await fetch("http://localhost:8000/join-event", {
         method: "POST",
         headers: {
@@ -125,7 +146,7 @@ const isCheckingJoined =
         setMessage("You have successfully joined this event!");
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
       setError(true);
       setMessage("Something went wrong. Please try again.");
     } finally {
@@ -258,7 +279,9 @@ const isCheckingJoined =
 
             <Button
               onClick={handleJoinEvent}
-              disabled={isJoining || isJoined || isPending || isCheckingJoined}
+              disabled={
+                isJoining || isJoined || isPending || isCheckingJoined
+              }
               className="gap-2 rounded-xl bg-emerald-600 px-6 text-white hover:bg-emerald-700 disabled:opacity-60"
             >
               <Heart size={18} fill="currentColor" />

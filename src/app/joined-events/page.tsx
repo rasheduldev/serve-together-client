@@ -8,6 +8,7 @@ import { Inbox } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import type { UpcomingEvent } from "@/lib/events";
 import UpcomingEventsCard from "@/components/UpcomingEventsCard";
+import { getTokenFromClient } from "@/lib/getTokenFromClient";
 
 const JoinedEventsPage = () => {
   const router = useRouter();
@@ -28,10 +29,15 @@ const JoinedEventsPage = () => {
     }
 
     const fetchJoinedEvents = async () => {
+      const token = await getTokenFromClient()
       try {
         // Get joined event records
         const res = await fetch(
-          `http://localhost:8000/joined-events/${session.user.email}`
+          `http://localhost:8000/joined-events/${session.user.email}`,{
+                headers:{
+                  authorization:`Bearer ${token}`
+                }
+              }
         );
 
         if (!res.ok) {
@@ -44,7 +50,7 @@ const JoinedEventsPage = () => {
         const eventData = await Promise.all(
           joinedEvents.map(async (item: { eventId: string }) => {
             const eventRes = await fetch(
-              `http://localhost:8000/upcoming-event/${item.eventId}`
+              `http://localhost:8000/upcoming-event/${item.eventId}`,
             );
 
             if (!eventRes.ok) return null;
