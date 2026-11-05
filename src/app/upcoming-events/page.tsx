@@ -1,3 +1,4 @@
+
 import UpcomingEventsList from "@/components/UpcomingEventsList"
 import type { UpcomingEvent } from "@/lib/events"
 
@@ -5,26 +6,38 @@ const UpcomingEventsPage = async () => {
   let events: UpcomingEvent[] = []
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upcoming-events`)
-
-    if (res.ok) {
-      const data = await res.json()
-
-      if (Array.isArray(data)) {
-        const today = new Date().toLocaleDateString("en-CA", {
-          timeZone: "Asia/Dhaka",
-        })
-
-        events = data
-          .filter((event: UpcomingEvent) => event.date >= today)
-          .sort(
-            (a: UpcomingEvent, b: UpcomingEvent) =>
-              new Date(a.date).getTime() - new Date(b.date).getTime()
-          )
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/upcoming-events`,
+      {
+        cache: "no-store",
       }
+    )
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch upcoming events")
     }
-  } catch {
-    events = []
+
+    const data = await res.json()
+
+    if (Array.isArray(data)) {
+      const today = new Date().toLocaleDateString("en-CA", {
+        timeZone: "Asia/Dhaka",
+      })
+
+      events = data
+        .filter((event: UpcomingEvent) => {
+          const eventDate = String(event.date).slice(0, 10)
+          return eventDate >= today
+        })
+        .sort((a: UpcomingEvent, b: UpcomingEvent) => {
+          const dateA = String(a.date).slice(0, 10)
+          const dateB = String(b.date).slice(0, 10)
+
+          return dateA.localeCompare(dateB)
+        })
+    }
+  } catch (error) {
+    console.error("Failed to load upcoming events:", error)
   }
 
   return (

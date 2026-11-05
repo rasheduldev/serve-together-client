@@ -105,54 +105,68 @@ const EventDetailsDialog = ({ event }: { event: UpcomingEvent }) => {
     .join(" ");
 
   // 4. Join Event
-  const handleJoinEvent = async () => {
-    // Wait until session checking is finished
-    if (isPending) return;
+  
+const handleJoinEvent = async () => {
+  if (isPending) return
 
-    // Check whether the user is logged in
-    if (!session?.user?.email) {
-      router.push("/log-in");
-      return;
+  if (!session?.user?.email) {
+    router.push("/log-in")
+    return
+  }
+
+  setIsJoining(true)
+  setMessage("")
+  setError(false)
+
+  try {
+    // Get the authentication token
+    const token = await getTokenFromClient()
+
+    if (!token) {
+      throw new Error("Authentication token not found")
     }
 
-    setIsJoining(true);
-    setMessage("");
-    setError(false);
-
-    try {
-      // Send event information to your existing backend
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/join-event`, {
+    // Send the join request with the token
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/join-event`,
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           eventId: event._id,
           userEmail: session.user.email,
         }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to join event");
       }
+    )
 
-      const data = await res.json();
+    const data = await res.json()
 
-      if (data.message === "Already joined") {
-        setIsJoined(true);
-        setMessage("You have already joined this event.");
-      } else {
-        setIsJoined(true);
-        setMessage("You have successfully joined this event!");
-      }
-    } catch (error) {
-      console.error(error);
-      setError(true);
-      setMessage("Something went wrong. Please try again.");
-    } finally {
-      setIsJoining(false);
+    if (!res.ok) {
+      throw new Error(data.msg || "Failed to join event")
     }
-  };
+
+    if (data.message === "Already joined") {
+      setIsJoined(true)
+      setMessage("You have already joined this event.")
+    } else {
+      setIsJoined(true)
+      setMessage("You have successfully joined this event!")
+    }
+  } catch (error) {
+    console.error("Join event error:", error)
+    setError(true)
+    setMessage(
+      error instanceof Error
+        ? error.message
+        : "Something went wrong. Please try again."
+    )
+  } finally {
+    setIsJoining(false)
+  }
+}
 
   return (
     <Dialog

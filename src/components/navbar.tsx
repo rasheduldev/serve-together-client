@@ -8,8 +8,6 @@ import { useTheme } from "next-themes";
 import {
   Calendar,
   Heart,
-  Menu,
-  X,
   LogOut,
   PlusCircle,
   ClipboardList,
@@ -42,7 +40,6 @@ export function Navbar() {
   const user = session?.user;
 
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
@@ -57,7 +54,6 @@ export function Navbar() {
     }
 
     setProfileMenuOpen(false);
-    setMenuOpen(false);
 
     toast.success("Logged out successfully!");
     router.push("/");
@@ -71,7 +67,7 @@ export function Navbar() {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
 
-  // Close desktop profile dropdown
+  // Close profile dropdown
   const closeProfileMenu = () => {
     setProfileMenuOpen(false);
   };
@@ -82,7 +78,7 @@ export function Navbar() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-lg shadow-emerald-500/30 sm:size-10">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-emerald-700 shadow-lg shadow-emerald-500/30 sm:size-10">
             <Heart className="size-5 fill-white text-white" />
           </span>
 
@@ -161,6 +157,20 @@ export function Navbar() {
 
                 <div className="mt-3 flex flex-col gap-1">
 
+                  {/* Upcoming Events - Mobile Only */}
+                  <Link
+                    href="/upcoming-events"
+                    onClick={closeProfileMenu}
+                    className="flex items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-accent md:hidden"
+                  >
+                    <Calendar className="size-4" />
+                    Upcoming Events
+                  </Link>
+
+                  {/* Separator - Mobile Only */}
+                  <div className="my-1 border-t border-border md:hidden" />
+
+                  {/* My Profile */}
                   <Link
                     href="/profile"
                     onClick={closeProfileMenu}
@@ -170,6 +180,7 @@ export function Navbar() {
                     My Profile
                   </Link>
 
+                  {/* Create Event */}
                   <Link
                     href="/create-event"
                     onClick={closeProfileMenu}
@@ -179,6 +190,7 @@ export function Navbar() {
                     Create Event
                   </Link>
 
+                  {/* Manage Events */}
                   <Link
                     href="/manage-events"
                     onClick={closeProfileMenu}
@@ -188,6 +200,7 @@ export function Navbar() {
                     Manage Events
                   </Link>
 
+                  {/* Joined Events */}
                   <Link
                     href="/joined-events"
                     onClick={closeProfileMenu}
@@ -199,6 +212,7 @@ export function Navbar() {
 
                   <div className="my-1 border-t border-border" />
 
+                  {/* Logout */}
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
@@ -213,146 +227,22 @@ export function Navbar() {
 
           {/* Logged-out User */}
           {!isPending && !user && (
-            <div className="hidden items-center gap-2 sm:flex">
+            <div className="flex items-center gap-2">
               <Link href="/log-in">
                 <Button variant="ghost" className="font-semibold">
                   Log In
                 </Button>
               </Link>
 
-              <Link href="/sign-up">
+              <Link href="/sign-up" className="hidden sm:block">
                 <Button className="bg-emerald-600 font-semibold text-white hover:bg-emerald-700">
                   Register
                 </Button>
               </Link>
             </div>
           )}
-
-          {/* Mobile Menu Button */}
-          <Button
-            variant="outline"
-            size="icon-lg"
-            className="md:hidden"
-            aria-label="Toggle menu"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            {menuOpen ? (
-              <X className="size-4" />
-            ) : (
-              <Menu className="size-4" />
-            )}
-          </Button>
         </div>
       </div>
-
-      {/* Mobile Navigation */}
-      {menuOpen && (
-        <div className="border-t border-border bg-background p-4 shadow-lg md:hidden">
-          <nav className="flex flex-col gap-2">
-
-            <Link
-              href="/upcoming-events"
-              onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-accent"
-            >
-              <Calendar className="size-4" />
-              Upcoming Events
-            </Link>
-
-            {!isPending && user && (
-              <>
-                <div className="my-2 border-t border-border" />
-
-                <div className="flex items-center gap-3 px-3 py-2">
-                  <Avatar className="size-10 border-2 border-emerald-500">
-                    <AvatarImage src={user.image || undefined} />
-                    <AvatarFallback className="bg-emerald-600 text-white">
-                      {userInitial}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">
-                      {user.name}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {user.email}
-                    </p>
-                  </div>
-                </div>
-
-                <Link
-                  href="/profile"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm hover:bg-accent"
-                >
-                  <UserRound className="size-4" />
-                  My Profile
-                </Link>
-
-                <Link
-                  href="/create-event"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm hover:bg-accent"
-                >
-                  <PlusCircle className="size-4" />
-                  Create Event
-                </Link>
-
-                <Link
-                  href="/manage-events"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm hover:bg-accent"
-                >
-                  <ClipboardList className="size-4" />
-                  Manage Events
-                </Link>
-
-                <Link
-                  href="/joined-events"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm hover:bg-accent"
-                >
-                  <Users className="size-4" />
-                  Joined Events
-                </Link>
-
-                <Button
-                  variant="ghost"
-                  onClick={handleLogout}
-                  className="w-full justify-start gap-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
-                >
-                  <LogOut className="size-4" />
-                  Logout
-                </Button>
-              </>
-            )}
-
-            {!isPending && !user && (
-              <>
-                <Link
-                  href="/log-in"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <Button variant="ghost" className="w-full justify-start">
-                    Log In
-                  </Button>
-                </Link>
-
-                <Link
-                  href="/sign-up"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <Button className="w-full justify-start bg-emerald-600 text-white hover:bg-emerald-700">
-                    Register
-                  </Button>
-                </Link>
-              </>
-            )}
-          </nav>
-        </div>
-      )}
     </header>
   );
 }
